@@ -1,0 +1,457 @@
+<!-- Making Start At 2015-10-09 FRI, Made By Anyang University Department of Computer Science Engineering 201431011 Dongyeong Kim -->
+<!-- First Assignment : Implement The game called "Chrong's Catching the files" -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>크롱을 잡는 게임</title>
+    <!-- Origin Source : http://pororo.jr.naver.com/game/territory/play.nhn?gameId=162&level=2&territory=CR -->
+    <!-- Flip Reference about Flipping Images in the Canvas(context.scale(scaleHorizontal,scaleVertical); ) : http://jsfiddle.net/yong/ZJQX5/ -->
+    <!-- PNG File Edited By Pixlr Editor(Web Photo Editor), link : https://pixlr.com/editor/ -->
+    <!-- Window Closing Function(window.close();) Referenced : http://idongmai.wo.tc/212 -->
+</head>
+<body>
+    <canvas width="1024" height="800" id="canvas">CANVAS NOT SUPPORTED</canvas>
+    <script type="text/javascript" src="module_customobject.js"></script>
+    <!--<script type="text/javascript" src="CustomObject%20API.js"></script>-->
+    <script type="text/javascript">
+        /* Mosquito Object Declaration */
+        var Mosquito=function(){
+            this.hp=2;
+            this.hp_min=0;
+            this.damage=1;
+            this.speed_x=1;//
+            this.remove=function()
+            {
+                if(move<=hp_min)
+                    DeleteCustomObject(CustomObjectList,CustomObjectList_Wait,this.id);
+            }
+        }
+        function func1()//Toggle REMOVE & CREATE OBJECT TEST function
+        {
+            var myobj=findCustomObjectByName("LOGO");
+            if(myobj==undefined){
+                AddCustomObject(CustomObjectList,CustomObjectList_Wait,100,100,100,100,"LOGO","res/img_logo_20151006.PNG",true);//Test Object
+            }
+            else{
+                DeleteCustomObject(CustomObjectList,CustomObjectList_Wait,myobj.id);
+            }
+        }
+        function AddMosquito()
+        {
+            var canvas_width=1024;
+            var x;
+            var y=Math.floor(Math.random()*600);
+            var temp_num=Math.random()*2;
+            var CustomObject_id;
+            var createdMosquito=undefined;
+            var fileName="res/mosquito.PNG";
+            if (Math.random()<=0.05)fileName="res/mosquito_poison.PNG";
+            if(temp_num<1){
+                x=-50-Math.random()*1024;
+                createdMosquito=AddCustomObject(CustomObjectList,CustomObjectList_Wait,x,y,50,50,"flies",fileName,true,2);
+                createdMosquito.direction=1;
+            }
+            else{
+                x=canvas_width+50+Math.random()*1024;
+                createdMosquito=AddCustomObject(CustomObjectList,CustomObjectList_Wait,x,y,50,50,"flies",fileName,true,2);
+                createdMosquito.direction=-1;
+            }
+            createdMosquito.hp=2;
+            if(fileName=="res/mosquito_poison.PNG")createdMosquito.hp=5;//Poison Mosquito's Hit Points
+            createdMosquito.speed_x=(75+Math.random()*25)*createdMosquito.direction;
+            createdMosquito.speed_y=10+Math.random()*5;
+            if(createdMosquito.speed_x<0)createdMosquito.direction=-1;
+            else createdMosquito.direction=1;
+            CustomObject_id=createdMosquito.id;
+            createdMosquito.addCustomObjectEventListener("mousedown",thisFunction);
+            function thisFunction(event){
+                var mouse_pointer=findCustomObjectByName("MOUSE_POINTER")
+                var objName;
+                var chrong=findCustomObjectByName("chrong");
+                if(mouse_pointer==undefined)return;
+                if(mouse_pointer.isObjectIn(event.offsetX-10,event.offsetY-10,20,20)&&mouse_pointer.attackcool<=0&&CustomObjectList[CustomObject_id].hp>0){
+                    CustomObjectList[CustomObject_id].speed_x/=2;
+                    CustomObjectList[CustomObject_id].speed_y/=2;
+                    CustomObjectList[CustomObject_id].hp--;
+                    CustomObjectList[CustomObject_id].deadsign="hitted by flycatcher";
+                    if(CustomObjectList[CustomObject_id].imgSrc=="res/mosquito_poison.PNG")
+                        if(CustomObjectList[CustomObject_id].isObjectIn(chrong.x,chrong.y,chrong.width,chrong.height)==true){
+                            chrong.hp--;
+                            chrong.deadsign="infected by poison";
+                        }//Damaged Chrong Too..
+                    if(CustomObjectList[CustomObject_id].attackcool<500)CustomObjectList[CustomObject_id].attackcool=500;
+                    mouse_pointer.attackcool=75;
+                    if(CustomObjectList[CustomObject_id].hp<=0)
+                    {
+                        CustomObjectList[CustomObject_id].attackcool=1000;
+                        if(CustomObjectList[CustomObject_id].y<500){
+                            CustomObjectList[CustomObject_id].speed_x=0;
+                            CustomObjectList[CustomObject_id].speed_y=400;
+                            CustomObjectList[CustomObject_id].eventTransparent=true;
+                        }
+                        else{
+                            CustomObjectList[CustomObject_id].speed_x=0;
+                            CustomObjectList[CustomObject_id].speed_y=0;
+                        }
+//                    if(CustomObjectList[CustomObject_id].name=="files"||CustomObjectList[CustomObject_id].name=="mosquito")AddMosquito();
+                    }
+                }
+
+ /*               if(findCustomObjectByName("flies")==undefined) {
+                    for (var i = 0; i < 20; i++)AddMosquito();
+                }*/
+            }
+
+        }
+        /* Movement Code(Not Algorithm, Just How to move) */
+        function moveMosquito(){
+            for(var idx=0;idx<CustomObjectList.length;idx++){
+                if(CustomObjectList[idx].name!=="flies")continue;
+                else{
+                    CustomObjectList[idx].x+=CustomObjectList[idx].speed_x*(this.time/1000);
+                    CustomObjectList[idx].y+=CustomObjectList[idx].speed_y*(this.time/1000);
+ //                   patternMosquito(CustomObjectList[idx]);
+                }
+            }
+        }
+        function patternMosquito(mosquito){
+            var chrong=findCustomObjectByName("chrong");
+            var durationTimer=findCustomObjectByName("LOGO").attackcool;
+ //           console.log(mosquito.name+" : existed Pattern");
+            if(durationTimer<=0||chrong.hp<=0){
+                mosquito.speed_x=0;
+                mosquito.speed_y=0;
+                mosquito.attackcool=10000;
+                if(chrong.x>=mosquito.x){
+                    mosquito.x=chrong.x-chrong.width;
+                    mosquito.direction=1;
+                }
+                else {
+                    mosquito.x=chrong.x+chrong.width;
+                    mosquito.direction=-1;
+                }
+
+            }
+            else {
+                if (mosquito.hp > 0) {
+                    if (mosquito.speed_x > 150 || mosquito.speed_x < -150)mosquito.speed_x = mosquito.direction/Math.abs(mosquito.direction)*(Math.random() * 20 + 40);
+                    if (mosquito.speed_y > 150 || mosquito.speed_y < -150)mosquito.speed_y = mosquito.direction/Math.abs(mosquito.direction)*(Math.random() * 20);
+                    if (mosquito.speed_y > 0 && mosquito.speed_y < 50 && chrong.y - chrong.height > mosquito.y)mosquito.speed_y = 50 + Math.random() * 50;
+                    if (mosquito.x >= chrong.x + chrong.width && mosquito.speed_x > 0) {
+                        mosquito.speed_x = -mosquito.speed_x * 1.5;
+                        if(Math.random()<0.2)mosquito.speed_x = -(Math.random() * 15 + 10);
+                    }
+                    else if (mosquito.x <= chrong.x - chrong.width && mosquito.speed_x < 0) {
+                        mosquito.speed_x = -mosquito.speed_x * 1.5;
+                        if(Math.random()<0.2)mosquito.speed_x = (Math.random() * 15 + 10);
+
+                    }
+                    if (mosquito.y > chrong.y + chrong.height / 2 && mosquito.speed_y > 0) {
+                        mosquito.speed_y = -mosquito.speed_y * (1.5 + Math.random());
+                    }
+                    else if (mosquito.y < chrong.y - chrong.height / 2 && mosquito.speed_y < 0) {
+                        mosquito.speed_y = -mosquito.speed_y * 0.85;
+                    }
+                    if (mosquito.speed_x < 0)mosquito.direction = -1;
+                    else mosquito.direction = 1;
+                }
+
+                if(findCustomObjectByName("WebShield")===undefined){
+                    if(((mosquito.speed_x*mosquito.speed_x)+(mosquito.speed_y*mosquito.speed_y))<900&&mosquito.attackcool<=0&&chrong.isObjectIn(mosquito.x,mosquito.y,mosquito.width,mosquito.height)){
+                        if(mosquito.hp>0&&chrong.attackcool<=0&&((mosquito.direction>0&&mosquito.x>=chrong.x)||(mosquito.direction<0&&mosquito.x<=chrong.x))){
+                            chrong.hp-=1;
+                            chrong.attackcool=2000;
+                            mosquito.attackcool=8000;
+                            mosquito.speed_x=mosquito.speed_x*2.5+mosquito.direction/Math.abs(mosquito.direction)*80;
+                            mosquito.speed_y/=2;
+                        }
+                    }
+                }
+            }
+        }
+        function dropMosquito(){
+            for(var i=0;i<CustomObjectList.length;i++){
+                if(CustomObjectList[i]==undefined||CustomObjectList[i].constructor!==CustomObject)continue;
+                if(CustomObjectList[i].hp>0)continue;
+                else{
+                    if(CustomObjectList[i].y<500){
+                        CustomObjectList[i].globalAlpha=CustomObjectList[i].attackcool=1000;
+                        continue;
+                    }
+                    else{
+                        if(CustomObjectList[i].speed_x!==0)CustomObjectList[i].speed_x=0;
+                        if(CustomObjectList[i].speed_y!==0)CustomObjectList[i].speed_y=0;
+                        if(CustomObjectList[i].attackcool==1000&&CustomObjectList[i].imgSrc=="res/mosquito_poison.PNG"){
+                            var chrong=findCustomObjectByName("chrong");
+                            if(chrong!==undefined&&CustomObjectList[i].isObjectIn(chrong.x,chrong.y,chrong.width,chrong.height))
+                            chrong.hp-=1;
+                            chrong.deadsign="infected by poision";
+                        }
+                        CustomObjectList[i].globalAlpha=CustomObjectList[i].attackcool/1000;
+                        if(CustomObjectList[i].attackcool<=0){
+                            DeleteCustomObject(CustomObjectList,CustomObjectList_Wait,i);
+                            AddMosquito();
+                        }
+                    }
+                }
+            }
+        }
+        /* CustomObject Append Function (Based On id property(replaced as index value)*/
+/*        function appendCustomObjectArrayIndex(arr,index,value){
+            if(index==undefined||(index==arr.length-1&&index>=0)){
+                arr[arr.length]=value;
+                arr.length++;
+            }
+            else{
+                for(var i=arr.length;i>index;i--){
+                    arr[i]=arr[i-1];
+                    if(arr.constructor===CustomObject)arr[i].id++;
+                }
+                arr.length++;
+                arr[i]=value;
+            }
+        }*/
+        /* appendArrayIndex : used For AddCustomObjectList_new Function, is Formed From Queue Structure*/
+        function appendArrayIndex(arr,index,value){
+            if(index==undefined||(index==arr.length-1&&index>=0)){
+                arr[arr.length]=value;
+                arr.length++;
+            }
+            else{
+                for(var i=arr.length;i>index;i--){arr[i]=arr[i-1];}
+                arr.length++;
+                arr[i]=value;
+            }
+        }
+        /* CustomObject remove Function (Based On id property(replaced as index value) */
+        /*
+        function removeCustomObjectArrayIndex(arr,index){
+            for(var i=index;i<arr.length;i++){
+                arr[i]=arr[i+1];
+                if(arr[i]!=undefined)arr[i].id=i;
+            }
+            arr.length-=1;
+        }*/
+        /* removeArrayIndex : is Formed From Queue Structure */
+        function removeArrayIndex(arr, index){
+            for(var i=index;i<arr.length;i++)
+                arr[i]=arr[i+1];
+            arr.length-=1;
+        }
+        function MOUSE_POINTER_onclick(e){
+            var x=e.offsetX;
+            var y= e.offsetY;
+        }
+        function MOUSE_POINTER_onmove(e){
+            var x=e.offsetX;
+            var y= e.offsetY;
+        }
+        function Game_Over(){
+            var duration=findCustomObjectByName("LOGO").attackcool;
+            var mouse_pointer=findCustomObjectByName("MOUSE_POINTER");
+            if((duration==0||findCustomObjectByName("chrong").hp<=0)&&mouse_pointer.imgSrc==="res/flycatcher.PNG"){
+                mouse_pointer.imgSrc="res/mousepointer.PNG";
+                mouse_pointer.x=MySrc.offsetX;
+                mouse_pointer.y=MySrc.offsetY;
+                mouse_pointer.width=25;
+                mouse_pointer.height=25;
+                mouse_pointer.draw=mouseArrow_display;
+                for(var i=0;i<CustomObjectList.length;i++)
+                    if(CustomObjectList[i].name=="flies"){
+                        CustomObjectList[i].removeCustomObjectEventListener("click");
+                        CustomObjectList[i].removeCustomObjectEventListener("mousemove");
+                        CustomObjectList[i].removeCustomObjectEventListener("mousedown");
+                    }
+                MySrc.addCustomScreenTimerFunction(function(){Activity_Retry()},5000);//goto Activity_Retry When 65 Seconds After
+            }
+        }
+        function flykiller_display(context,drawType){
+            if(this.display==false)return;
+            if(drawType=="image"){
+                context.beginPath();
+                var direction=this.direction/Math.abs(this.direction);
+                var image=new Image();
+                image.src=this.imgSrc;
+                var x_distance,y_distance;
+                if(this.attackcool>0){
+                    x_distance=this.width*0.025;
+                    y_distance=this.height*0.3;
+                }
+                else{
+                    x_distance = this.width*0.025+10;
+                    y_distance = this.height*0.3+10;
+                }
+                context.save();//must written
+                context.scale(direction,1);
+                context.drawImage(image,(this.x-this.width/2+x_distance)*direction,(this.y-this.height/2+y_distance),this.width*direction,this.height);
+                context.scale(1,1);//restore origin state
+                context.restore();//must written
+            }
+        }
+        function mouseArrow_display(context,drawType){
+            if(this.display==false)return;
+            if(drawType=="image"){
+                context.beginPath();
+                var direction=this.direction/Math.abs(this.direction);
+                var image=new Image();
+                image.src=this.imgSrc;
+                context.save();//must written
+                context.scale(direction,1);
+                context.drawImage(image,(this.x)*direction,(this.y),this.width*direction,this.height);
+                context.scale(1,1);//restore origin state
+                context.restore();//must written
+            }
+        }
+        function displayChrongHPStateUsingBand(){
+            var band1=findCustomObjectByName("band1");
+            var band2=findCustomObjectByName("band2");
+            var band3=findCustomObjectByName("band3");
+            var chrong=findCustomObjectByName("chrong");
+            var vailbandImgSrc="res/vailband.PNG";
+            var vailband_fadeImgSrc="res/vailband_fade.PNG";
+            if(chrong.hp<3)band3.imgSrc=vailband_fadeImgSrc;
+            else band3.imgSrc=vailbandImgSrc;
+            if(chrong.hp<2)band2.imgSrc=vailband_fadeImgSrc;
+            else band2.imgSrc=vailbandImgSrc;
+            if(chrong.hp<1)band1.imgSrc=vailband_fadeImgSrc;
+            else band1.imgSrc=vailbandImgSrc;
+        }
+        function  setWeb(){
+            var chrong=findCustomObjectByName("chrong");
+            var btn_web=findCustomObjectByName("button_web");
+            if(btn_web!==undefined&&chrong!==undefined &&webShield==undefined &&btn_web.imgSrc=="res/button_web.PNG"){
+                btn_web.imgSrc="res/button_web_fade.PNG";
+                AddCustomObject(CustomObjectList,CustomObjectList_Wait,chrong.x,chrong.y,74*4,92*4,"WebShield","res/button_web.PNG",true,1,true);
+                var webShield=findCustomObjectByName("WebShield");
+                webShield.attackcool=10000;//10 Seconds
+                webShield.globalAlpha=0.5;
+            }
+        }
+        function removeWeb(){
+            var webShield=findCustomObjectByName("WebShield");
+            if(webShield!==undefined&&webShield.attackcool<=0)
+            {
+                DeleteCustomObject(CustomObjectList,CustomObjectList_Wait,webShield.id);
+            }
+
+        }
+        function enrollTitleButton(){
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,778,37,43,41,"title_question","res/title_question.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,828,37,43,41,"title_fullscreen","res/title_fullscreen.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,878,37,43,41,"title_retry","res/title_retry.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,928,37,43,41,"title_anothergame","res/title_anothergame.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,978,37,43,41,"title_exit","res/title_exit.PNG",true);
+            findCustomObjectByName("title_retry").addCustomObjectEventListener("click",Activity_Title);
+            findCustomObjectByName("title_exit").addCustomObjectEventListener("click",function(){window.close()});
+        }
+        function Activity_Title(){
+            MySrc.resetCustomScreenState();
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,512,330+80,1024,660,"intro","res/intro.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,512,40,1024,80,"title","res/top.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,515,80+580,269,100,"btn_start","res/btn_start.PNG",true);//Start Button
+//            AddCustomObject(CustomObjectList,CustomObjectList_Wait,350,350,100,100,"flies","res/mosquito.PNG",true);
+//            AddCustomObject(CustomObjectList,CustomObjectList_Wait,200,200,170,280,"chrong","res/chrong.PNG",true);
+            enrollTitleButton();
+//            AddCustomObject(CustomObjectList,CustomObjectList_Wait,100,100,100,100,"LOGO","res/img_logo_20151006.PNG",true);//Test Object
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,100,100,25,25,"MOUSE_POINTER","res/mousepointer.PNG",true);
+            findCustomObjectByName("MOUSE_POINTER").draw=mouseArrow_display;
+
+            findCustomObjectByName("btn_start").addCustomObjectEventListener("click",Activity_Game);
+//            var btn=findCustomObjectByName("btn_start");
+ //           btn.addCustomObjectEventListener("click",func1);
+ //           var btn2=findCustomObjectByName("flies");
+ //           btn2.addCustomObjectEventListener("click",Activity_Game);
+        }
+        function Activity_Introduction(){
+
+        }
+        function Activity_Game(){
+            MySrc.resetCustomScreenState();
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,512,330+80,1024,660,"intro","res/field.PNG",true,-1);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,512,40,1024,80,"title","res/top.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,525,365,175,280,"chrong","res/chrong.PNG",true);
+            for(var i=0;i<40;i++)
+                AddMosquito();
+
+            enrollTitleButton();
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,230,655,34,92,"button_pororo_killer1","res/button_pororo_killer_fade.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,293,655,34,92,"button_pororo_killer2","res/button_pororo_killer_fade.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,355,655,34,92,"button_pororo_killer3","res/button_pororo_killer_fade.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,484,655,74,92,"button_web","res/button_web.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,620,652,60,94,"band1","res/vailband.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,684,652,60,94,"band2","res/vailband.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,748,652,60,94,"band3","res/vailband.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,909,662,56,56,"LOGO","res/img_logo_20151006.PNG",true);//Test Object
+            findCustomObjectByName("button_web").addCustomObjectEventListener("click",setWeb);
+            findCustomObjectByName("chrong").hp=3;
+
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,100,100,108,240,"MOUSE_POINTER","res/flycatcher.PNG",true,undefined,true);
+            findCustomObjectByName("MOUSE_POINTER").addCustomObjectEventListener("click",function(e){;});
+//            findCustomObjectByName("MOUSE_POINTER").addCustomObjectEventListener("mousedown",function(e){if(this.attackcool<=0)this.attackcool=1500;});
+            findCustomObjectByName("MOUSE_POINTER").draw=flykiller_display;
+
+            MySrc.addCustomScreenTimerFunction(MySrc.AttackCool);
+            findCustomObjectByName("LOGO").draw=function(context,drawType){
+                context.beginPath();
+                context.fillStyle="yellow";
+                context.moveTo(this.x,this.y);
+                context.arc(this.x,this.y,(this.width+this.height)/4,0-Math.PI/2,0-Math.PI/2+Math.PI*2*(60000-this.attackcool)/60000,false);
+                context.closePath();
+                context.fill();
+            }
+            MySrc.addCustomScreenTimerFunction(mosquitoPattern);
+            function mosquitoPattern(){
+                for(var i=0;i<CustomObjectList.length;i++){
+                    if(CustomObjectList[i]!==undefined){
+                        if(CustomObjectList[i].name==="flies")
+                            patternMosquito(CustomObjectList[i]);
+                    }
+                }
+            }
+            findCustomObjectByName("LOGO").attackcool=60000;
+            MySrc.addCustomScreenTimerFunction(Game_Over);//remove All Mosquito's Click, mousemove, mousedown EventListener
+            MySrc.addCustomScreenTimerFunction(displayChrongHPStateUsingBand);
+            MySrc.addCustomScreenTimerFunction(removeWeb);
+            MySrc.addCustomScreenTimerFunction(dropMosquito);
+        }
+        function Activity_Retry(){
+            MySrc.resetCustomScreenState();
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,1024/2,744/2,1024,744,"background","res/retry.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,235,342,208,84,"btn_retry","res/btn_retry.PNG",true);
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,798,342,208,84,"btn_exit","res/btn_exit.PNG",true);
+
+            enrollTitleButton();
+            AddCustomObject(CustomObjectList,CustomObjectList_Wait,0,0,25,25,"MOUSE_POINTER","res/mousepointer.PNG",true);
+            findCustomObjectByName("btn_retry").addCustomObjectEventListener("click",function(){Activity_Game();});
+            findCustomObjectByName("btn_exit").addCustomObjectEventListener("click",function(){thisexit();});
+            findCustomObjectByName("MOUSE_POINTER").draw=mouseArrow_display;
+            function thisexit(){
+                    window.close();
+            }
+            findCustomObjectByName("background").attackcool=4000;
+        }
+
+
+
+        var mosquito_list=[];
+        var mosquito_list_wait=[];
+
+        MySrc=new CustomScreen("canvas");
+        MySrc.StartLoadScreen();
+        MySrc.addCustomScreenEventListener();
+
+        /* Default Initializing Part End*/
+
+        Activity_Title();
+
+        var canvas=document.getElementById("canvas");
+        var context=canvas.getContext("2d");
+
+        context.beginPath();
+        context.fillRect(0,0,100,100);
+
+    </script>
+</body>
+</html>

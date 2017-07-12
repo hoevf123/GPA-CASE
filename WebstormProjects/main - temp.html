@@ -1,0 +1,74 @@
+<!-- Making Start At 2015-10-09 FRI, Made By Anyang University Department of Computer Science Engineering 201431011 Dongyeong Kim -->
+<!-- First Assignment : Implement The game called "Chrong's Catching the files" -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>크롱을 잡는 게임</title>
+    <!-- Origin Source : http://pororo.jr.naver.com/game/territory/play.nhn?gameId=162&level=2&territory=CR -->
+    <!-- Flip Reference about Flipping Images in the Canvas(context.scale(scaleHorizontal,scaleVertical); ) : http://jsfiddle.net/yong/ZJQX5/ -->
+    <!-- PNG File Edited By Pixlr Editor(Web Photo Editor), link : https://pixlr.com/editor/ -->
+    <!-- Window Closing Function(window.close();) Referenced : http://idongmai.wo.tc/212 -->
+</head>
+<body>
+    <canvas width="1024" height="800" id="canvas">CANVAS NOT SUPPORTED</canvas>
+    <script type="text/javascript" src="module_customobject.js"></script>
+    <!--<script type="text/javascript" src="CustomObject%20API.js"></script>-->
+    <script type="text/javascript">
+        var Brick = function(x,y,width,height,colour){
+            this.targetObject = AddCustomObject(CustomObjectList,CustomObjectList_Wait,x,y,width,height,"brick","res/undefined.PNG",true);
+            this.targetObject.draw = function(context){
+                context.fillRect(this.x,this.y,this.width,this.height);
+            }
+            if(colour !== undefined)
+                this.targetObject.color = colour;
+            this.targetObject.hp=1;
+            return this.targetObject;
+        }
+        var Ball = function(x,y,width,height){
+            this.targetObject = AddCustomObject(CustomObjectList,CustomObjectList_Wait,x,y,width,height,"ball","res/undefined.PNG",true);
+            this.targetObject.draw = function(context){
+                context.fillRect(x,y,width,height);
+            }
+            this.onkeydown=function(e){
+                
+            }
+            return this.targetObject;
+        }
+        function Activity_Title(){
+            MySrc.resetCustomScreenState();
+            new Brick(0,0,100,100);
+            new Brick(100,100,200,200);
+            new Ball(400,400,50,50);
+        }
+        function Activity_Introduction(){
+
+        }
+        function Activity_Game(){
+            MySrc.resetCustomScreenState();
+           
+        }
+
+
+
+        var mosquito_list=[];
+        var mosquito_list_wait=[];
+
+        MySrc=new CustomScreen("canvas");
+        MySrc.StartLoadScreen();
+        MySrc.addCustomScreenEventListener();
+
+        /* Default Initializing Part End*/
+
+        Activity_Title();
+
+        var canvas=document.getElementById("canvas");
+        var context=canvas.getContext("2d");
+
+        context.beginPath();
+        context.fillRect(0,0,100,100);
+
+    </script>
+</body>
+</html>
